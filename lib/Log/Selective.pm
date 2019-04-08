@@ -1,7 +1,21 @@
+package Log::Selective;
+
+
+# Log::Selective
+# Copyright 2019 Alexander Hajnal, All rights reserved
+# 
+# Alex Kent Hajnal
+# --------------------------------------
+# akh@cpan.org
+# https://alephnull.net/software
+# https://github.com/Alex-Kent/Log-Selective
+# 
+# This module is free software; you can redistribute it and/or modify it under 
+# the same terms as Perl itself.  See the LICENSE file or perlartistic(1).
+
+
 use strict;
 use warnings;
-
-package Log::Selective;
 
 =encoding utf8
 
