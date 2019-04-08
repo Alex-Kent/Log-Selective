@@ -1,0 +1,13 @@
+Changes
+examples/00_index.txt
+ignore.txt
+lib/Log/Selective.pm
+LICENSE
+Makefile.PL
+MANIFEST
+README
+README.md
+t/00-load.t
+t/manifest.t
+t/pod-coverage.t
+t/pod.t
