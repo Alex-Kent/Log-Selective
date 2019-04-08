@@ -78,7 +78,7 @@ Note that use of this module on Windows has not been tested by the author.
 
 =head3 Logging
 
-Each time a logging call is made the Lib::Selective compare's the message's log 
+Each time a logging call is made the Log::Selective compare's the message's log 
 level to the current verbosity level.  If the message's level is the same or 
 lower than the current verbosity it is displayed, if not it is discarded.
 
@@ -222,7 +222,7 @@ where C<I<NNN>> is the decimal color to use (0..255).  The available colors are:
 
 Not many terminals suport 24-bit color.  To specify this one should use 
 "C<;I<RRR>;I<GGG>;I<BBB>>" where C<I<RRR>> is the red component, C<I<GGG>> is 
-the green component, and C<I<RRR>> is the green component (all values are 0.255).
+the green component, and C<I<BBB>> is the blue component (all values are 0.255).
 
 =head3 Constants
 
@@ -320,7 +320,7 @@ Any desired functions or constants to import should be listed in C<I<SYMBOLS>>
 
 =item * B<C<:constants>> E<rarr> Color and style constants
 
-These are described in B<Constants>, below.
+These are as described in B<Constants>, above.
 
 =item * B<C<:loggers>> E<rarr> Logging functions
 
@@ -1571,7 +1571,7 @@ sub stack_trace(;$$) {
 
 =over
 
-C<get_stack_trace( );>
+C<@stack_trace = get_stack_trace( );>
 
 Return a stack trace as a list
 
@@ -1641,7 +1641,7 @@ sub call_trace(;$) {
 
 =over
 
-C<get_call_trace( );>
+C<$call_trace = get_call_trace( );>
 
 Return an abbreviated call trace as a string
 
