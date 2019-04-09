@@ -202,11 +202,11 @@ Many terminals support 8-bit color.  To specifiy this one should use "C<;I<NNN>>
 where C<I<NNN>> is the decimal color to use (0..255).  The available colors are:
 
   0-7     -> Standard colors:
-             BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE
+             BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, LIGHT_GREY *
              
   8-15    -> Bright colors:
-             BRIGHT_BLACK, BRIGHT_RED, BRIGHT_GREEN, BRIGHT_YELLOW, 
-             BRIGHT_BLUE, BRIGHT_MAGENTA, BRIGHT_CYAN, BRIGHT_WHITE
+             DARK_GREY *, BRIGHT_RED, BRIGHT_GREEN, BRIGHT_YELLOW, 
+             BRIGHT_BLUE, BRIGHT_MAGENTA, BRIGHT_CYAN, WHITE *
              
   16-231  -> 216 color cube (6x6x6)
              The equation to determine the values is:
@@ -219,6 +219,9 @@ where C<I<NNN>> is the decimal color to use (0..255).  The available colors are:
              $value = ( $value <= 0 )  ? 0
                     : ( $value >= 25 ) ? 15
                     :                    $value + 231;
+  
+  * Note: ANSI calls LIGHT_GREY "white", DARK_GREY "bright black", and WHITE 
+          "bright white".
 
 Not many terminals suport 24-bit color.  To specify this one should use 
 "C<;I<RRR>;I<GGG>;I<BBB>>" where C<I<RRR>> is the red component, C<I<GGG>> is 
@@ -244,8 +247,9 @@ The following constants are used to specify text colors and styles:
 
   BLACK         DARK_GREY       LIGHT_GREY        WHITE
 
-These correspond to the ANSI colors BLACK, BRIGHT_BLACK, WHITE, and 
-BRIGHT_WHITE, respectively.
+These correspond to the ANSI colors "black", "bright black," "white", and 
+"bright white", respectively.  The constant C<DARK_GRAY> can also be used for 
+C<DARK_GREY> and C<LIGHT_GRAY> can also be used for C<LIGHT_GREY>.
 
 =item Normal colors:
 
@@ -612,7 +616,7 @@ Do not show a stack trace after errors
 
 use Exporter 'import';
 
-my @constants  = qw( FAINT  NORMAL  BOLD  BLACK  DARK_GREY  LIGHT_GREY  WHITE  RED  GREEN  YELLOW  BLUE  MAGENTA  CYAN  BRIGHT_RED  BRIGHT_GREEN  BRIGHT_YELLOW  BRIGHT_BLUE  BRIGHT_MAGENTA  BRIGHT_CYAN  DEFAULT  NO_UNDERLINE  UNDERLINE  NO_ITALIC  ITALIC  NO_BLINK  BLINK );
+my @constants  = qw( FAINT  NORMAL  BOLD  BLACK  DARK_GREY  DARK_GRAY  LIGHT_GREY  LIGHT_GRAY  WHITE  RED  GREEN  YELLOW  BLUE  MAGENTA  CYAN  BRIGHT_RED  BRIGHT_GREEN  BRIGHT_YELLOW  BRIGHT_BLUE  BRIGHT_MAGENTA  BRIGHT_CYAN  DEFAULT  NO_UNDERLINE  UNDERLINE  NO_ITALIC  ITALIC  NO_BLINK  BLINK );
 my @logggers   = qw( LOG  WARN  WARNING  ERROR );
 my @basic      = qw( set_verbosity  get_verbosity  set_color_mode  extra_logging  show_warnings  show_errors  stack_trace  call_trace );
 my @extra      = qw( 
@@ -658,7 +662,9 @@ our %EXPORT_TAGS = (
 
 use constant BLACK           => 0;  # 30 / 40   "Black"
 use constant DARK_GREY       => 60; # 90 / 100  "Bright black"
+use constant DARK_GRAY       => 60; # 90 / 100  "Bright black"
 use constant LIGHT_GREY      => 7;  # 37 / 47   "White"
+use constant LIGHT_GRAY      => 7;  # 37 / 47   "White"
 use constant WHITE           => 67; # 97 / 107  "Bright white"
 
 use constant RED             => 1;  # 31 / 41   "Red"
