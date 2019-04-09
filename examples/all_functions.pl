@@ -277,7 +277,7 @@ A();
 
 # ------------------------------------------------------------------------------
 
-print "\n\nSetting levels' colors and styles is not yet imlemented\n";
+print "\n\nSetting levels' colors and styles is not yet implemented\n";
 
 #set_colors( \%colors ); # Specify the colors and styles used at each log level
 
