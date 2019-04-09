@@ -1372,6 +1372,11 @@ sub set_colors($;$) {
 
 
 
+# +++ FIXME - Add option to indent messages at levels > 0 +++
+
+
+
+
 =head2 append_newlines( ... )
 
 =over

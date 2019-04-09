@@ -13,11 +13,11 @@ sub show_usage();
 
 # Parse commandline options
 
-my $help                      = undef;
-my $verbose                   = 0;
-my $quiet                     = undef;
-my $silent                    = undef;
-my $color                     = 'auto';
+my $help     = undef;
+my $verbose  = 0;
+my $quiet    = undef;
+my $silent   = undef;
+my $color    = 'auto';
 
 Getopt::Long::Configure ("no_ignore_case", "bundling");
 
