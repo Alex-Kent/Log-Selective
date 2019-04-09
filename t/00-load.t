@@ -4,8 +4,8 @@
 use Test::More tests => 1;
 
 BEGIN {
-    use_ok( 'Geo::Index' ) || print "Bail out!
+    use_ok( 'Log::Selective' ) || print "Bail out!
 ";
 }
 
-diag( "Testing Geo::Index $Geo::Index::VERSION, Perl $], $^X" );
+diag( "Testing Log::Selective $Log::Selective::VERSION, Perl $], $^X" );
