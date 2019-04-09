@@ -949,7 +949,7 @@ The list can also be retrieved using C<L<get_warnings( )|/get_warnings(_)>>.
 
 =cut
 
-sub WARN($) {
+sub WARN($;$) {
 	my ($message) = ( $_[0] eq 'Log::Selective' )
 	              ? $_[1]
 	              : $_[0];
@@ -986,7 +986,7 @@ The list can also be retrieved using C<L<get_errors( )|/get_errors(_)>>.
 
 =cut
 
-sub ERROR($) {
+sub ERROR($;$) {
 	my ($message) = ( $_[0] eq 'Log::Selective' )
 	              ? $_[1]
 	              : $_[0];
@@ -1028,7 +1028,7 @@ be useful for showing a warning summary at the end of a program's run.
 
 =cut
 
-sub show_warnings() {
+sub show_warnings(;$) {
 	if (scalar @warnings) {
 		if ($VERBOSE >= 0) {
 			LOG(-1, "Warnings encountered:\n" . join($NEWLINE, @warnings) );
@@ -1057,7 +1057,7 @@ showing an error summary at the end of a program's run.
 
 =cut
 
-sub show_errors() {
+sub show_errors(;$) {
 	if (scalar @errors) {
 		if ($VERBOSE >= 0) {
 			LOG(-2, "Errors encountered:\n" . join($NEWLINE, @errors) );
@@ -1276,7 +1276,7 @@ Do not perform extra logging
 =cut
 
 
-sub extra_logging($$) {
+sub extra_logging($$;$) {
 	my ($verbosity, $pattern) = ( $_[0] eq 'Log::Selective' )
 	                          ? @_[1..2]
 	                          : @_[0..1];
@@ -1353,7 +1353,7 @@ This function is currently unimplemented.
 
 =cut
 
-sub set_colors($) {
+sub set_colors($;$) {
 	my ($_colors) = ( $_[0] eq 'Log::Selective' )
 	              ? $_[1]
 	              : $_[0];
@@ -1418,6 +1418,9 @@ sub no_append_newlines() {
 # .-----------------------.
 # |  Output file handles  |
 # '-----------------------'
+
+
+# +++ FIXME - Support teeing output to a log tile +++
 
 
 =head2 log_to( ... )
@@ -1490,7 +1493,7 @@ Technically, this option sets the handle used for all messages at levels -2 and 
 
 =cut
 
-sub log_to ($) {
+sub log_to ($;$) {
 	if ( $_[0] eq 'Log::Selective' ) {
 		$OUTPUT = $_[1];
 	} else {
@@ -1498,7 +1501,7 @@ sub log_to ($) {
 	}
 }
 
-sub warnings_to($) {
+sub warnings_to($;$) {
 	if ( $_[0] eq 'Log::Selective' ) {
 		$WARNINGS = $_[1];
 	} else {
@@ -1506,7 +1509,7 @@ sub warnings_to($) {
 	}
 }
 
-sub errors_to($) {
+sub errors_to($;$) {
 	if ( $_[0] eq 'Log::Selective' ) {
 		$ERRORS = $_[1];
 	} else {
@@ -1545,6 +1548,9 @@ C<L<set_stack_trace_level(...)|/set_stack_trace_level(_..._)>>.
 =back
 
 =cut
+
+# +++ FIXME - Make the heading and newlines optional? +++
+# +++ FIXME - Allow a log level to be specified as with LOG()? +++
 
 sub stack_trace(;$$) {
 	my ($message) = ( scalar @_ )
@@ -1626,6 +1632,8 @@ C<L<set_stack_trace_level(...)|/set_stack_trace_level(_..._)>>.
 
 =cut
 
+# +++ FIXME - Allow a log level to be specified as with LOG()? +++
+
 sub call_trace(;$) {
 	my @path = ();
 	my $n=1;
@@ -1696,9 +1704,9 @@ By default the stack trace level is C<-3>.
 
 =cut
 
-sub set_stack_trace_level($) {
+sub set_stack_trace_level($;$) {
 	$STACKTRACE_LEVEL = ( scalar @_ )
-	                  ? ( $_[0] eq 'Log::Selective' )
+	                  ? ( ( defined $_[0] ) && ( $_[0] eq 'Log::Selective' ) )
 	                    ? $_[1]
 	                    : $_[0]
 	                  : undef;
@@ -1781,7 +1789,7 @@ sub stack_trace_on_warnings(;$$) {
 	$STACKTRACE_ON_WARNINGS = ( defined $requested ) ? $requested : 1;
 }
 
-sub no_stack_trace_on_warnings($) {
+sub no_stack_trace_on_warnings(;$) {
 	$STACKTRACE_ON_WARNINGS = 0;
 }
 
@@ -1795,7 +1803,7 @@ sub stack_trace_on_errors(;$$) {
 	$STACKTRACE_ON_ERRORS = ( defined $requested ) ? $requested : 1;
 }
 
-sub no_stack_trace_on_errors($) {
+sub no_stack_trace_on_errors(;$) {
 	$STACKTRACE_ON_ERRORS = 0;
 }
 

@@ -8,9 +8,9 @@ use warnings;
 use Log::Selective;
 
 sub D() {
-    stack_trace();
-    LOG(-3, "Call trace:");
-		call_trace();
+	stack_trace();
+	LOG(-3, "Call trace:");
+	call_trace();
 }
 
 sub C() { D(); }

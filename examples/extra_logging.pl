@@ -9,19 +9,19 @@ use Log::Selective;
 
 
 sub A() {
-    LOG( 3, "In A()" );
+	LOG( 3, "In A()" );
 }
 
 sub B() {
-    LOG( 3, "In B()" );            # Not output to console
+	LOG( 3, "In B()" );            # Not output to console
 }
 
 sub C() {
-    LOG( 3, "In C()" );
+	LOG( 3, "In C()" );
 }
 
 sub D() {
-    LOG( 1, "In D()" );
+	LOG( 1, "In D()" );
 }
 
 
