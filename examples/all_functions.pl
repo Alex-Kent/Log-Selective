@@ -299,7 +299,7 @@ append_newlines();  # Append newlines to log messages
 
 LOG(0, "Multiple ");
 LOG(1, "log ");
-LOG(2, "messages\n");
+LOG(2, "messages");
 
 
 
