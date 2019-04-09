@@ -10,7 +10,6 @@ use Log::Selective;
 sub A() { B(); }
 sub B() { C(); }
 sub C() { D(); }
-
 sub D() {
 	stack_trace();
 	LOG(-3, "Call trace:");
