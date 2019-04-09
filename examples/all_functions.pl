@@ -7,13 +7,13 @@ use warnings;
 use Log::Selective;
 
 
-sub A() {	LOG( 1, "In A()" );	    B(); }
-sub B() {	LOG( 2, "In B()" );	    C(); }
-sub C() {	LOG( 3, "In C()" );	    D(); }
-sub D() {	LOG( 4, "In D()" );          }
+sub A() {  LOG( 1, "In A()" );      B();  }
+sub B() {  LOG( 2, "In B()" );      C();  }
+sub C() {  LOG( 3, "In C()" );      D();  }
+sub D() {  LOG( 4, "In D()" );            }
 
-sub E() {	WARN("Warning in E()"); F(); }
-sub F() {	ERROR("Error in F()");       }
+sub E() {  WARN("Warning in E()");  F();  }
+sub F() {  ERROR("Error in F()");         }
 
 
 # === Verbosity ================================================================
