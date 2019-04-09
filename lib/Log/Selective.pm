@@ -803,6 +803,13 @@ sub LOG($$;$$$@) {
 		( $level, $message, $FORE, $BACK, @STYLE ) = @_;
 	}
 	
+	$level = int $level;
+	
+	# +++ FIXME - Before going through the extra verbosity checks    +++
+	# +++         this should check first whether level <= verbosity +++
+	# +++         so that the overhead of walking the stack can be   +++
+	# +++         avoided.                                           +++
+	
 	if (defined $EXTRA_VERBOSITY) {
 		# Check whether logging should be extra verbose
 		my @path = ();
@@ -823,7 +830,7 @@ sub LOG($$;$$$@) {
 		
 	} else {
 		# Normal verbosity
-		return unless ( $VERBOSE >= $level);
+		return unless ( $VERBOSE >= $level );
 	}
 	
 	# Record level for stack_trace's sake
@@ -1206,9 +1213,9 @@ Sets verbosity to C<-999>.
 
 sub set_verbosity($;$) {
 	if ( $_[0] eq 'Log::Selective' ) {
-		$VERBOSE = $_[1];
+		$VERBOSE = int $_[1];
 	} else {
-		$VERBOSE = $_[0];
+		$VERBOSE = int $_[0];
 	}
 }
 
@@ -1274,7 +1281,7 @@ sub extra_logging($$) {
 	                          ? @_[1..2]
 	                          : @_[0..1];
 	
-	$EXTRA_VERBOSITY = $verbosity;
+	$EXTRA_VERBOSITY = int $verbosity;
 	$EXTRA_PATTERN   = $pattern;
 }
 
@@ -1323,6 +1330,7 @@ By default the color mode is B<'auto'>.
 
 sub set_color_mode($;$) {
 	my $requested = ( $_[0] eq 'Log::Selective' ) ? $_[1] : $_[0];
+	return unless ( $requested =~ /^(?:on|off|auto)$/);
 	$COLOR_MODE = $requested;
 }
 

@@ -1,4 +1,8 @@
 Changes
+examples/00_index.txt
+examples/extra_logging.pl
+examples/getopt_long.pl
+examples/stack_trace.pl
 ignore.txt
 lib/Log/Selective.pm
 LICENSE
