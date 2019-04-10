@@ -1372,7 +1372,8 @@ sub set_colors($;$) {
 
 
 
-# +++ FIXME - Add option to indent messages at levels > 0 +++
+# +++ FIXME - Add option to indent messages at levels > 0               +++
+# +++         This should only be done when newlines are being appended +++
 
 
 
