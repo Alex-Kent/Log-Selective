@@ -1,6 +1,7 @@
 00_index.txt ................ This file
 all_functions.pl ............ Shows use of all Log::Selective functions
-getopt_long.pl .............. Shows use with Getopt::Long
+colors.pl ................... Shows all combinations of the 16 ANSI colors
 extra_logging.pl ............ Shows use of extra_logging(...)
+getopt_long.pl .............. Shows use with Getopt::Long
 stack_trace.pl .............. Shows use of stack_trace() and call_trace()
-
+styles.pl ................... Shows use of built-in and custom text styles

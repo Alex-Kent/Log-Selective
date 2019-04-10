@@ -51,6 +51,7 @@ LOG( 1, "Level 1 debug message" );
 LOG( 2, "Level 2 debug message" );
 LOG( 3, "Level 3 debug message" );
 LOG( 4, "Level 4 debug message" );
+LOG( 5, "Level 5 debug message" );
 WARN( "Warning message" );
 ERROR( "Error message" );
 

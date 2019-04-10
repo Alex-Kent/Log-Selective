@@ -26,23 +26,21 @@ Log::Selective - Selective logging to the console.
 =cut
 
 use vars qw ($VERSION);
-$VERSION = 'v0.0.1';
+$VERSION = 'v0.0.2';
 
 =head1 VERSION
 
-This document describes Log::Selective version 0.0.1
+This document describes Log::Selective version 0.0.2
 
 =head1 DESCRIPTION
 
-Log::Selective is a way for commandline programs to display status messages.  
-The level of verbosity can be controlled without having to change the program's 
-code.  Messages at different levels of verbosity can have different colors and 
-styles applied.  The module also allows extra verbosity for specific functions 
-or methods.
+Log::Selective is a logger with adjustable verbosity for commandline Perl 
+programs. Different verbosity levels can have different colors and styles 
+applied and specific functions or methods can get extra verbosity.
 
-Some additional functions are also provided.  A summary of all warnings or 
-errors that were encountered can be displayed.  Stack traces can been shown 
-either on demand or whenever there are warnings or errors.
+Additional functions are provided for displaying summaries of all 
+warnings or errors encountered. Stack traces can been shown on demand or 
+whenever there are warnings or errors.
 
 
 =head1 USAGE
@@ -286,6 +284,13 @@ does is C<rxvt> (though using italics with it will remove any underlining).
 Note that blink does not work in C<rxvt> when a background color is specified.
 Some terminals stop blinking text when the window is not focused; with C<xterm> 
 blinking text might not be visible when the window does not have focus.
+
+=item Remove all styles:
+
+  NO_STYLE
+
+This constant is be used to specify that normal-weight, unstyled text should 
+be displayed.
 
 =back
 
@@ -616,7 +621,7 @@ Do not show a stack trace after errors
 
 use Exporter 'import';
 
-my @constants  = qw( FAINT  NORMAL  BOLD  BLACK  DARK_GREY  DARK_GRAY  LIGHT_GREY  LIGHT_GRAY  WHITE  RED  GREEN  YELLOW  BLUE  MAGENTA  CYAN  BRIGHT_RED  BRIGHT_GREEN  BRIGHT_YELLOW  BRIGHT_BLUE  BRIGHT_MAGENTA  BRIGHT_CYAN  DEFAULT  NO_UNDERLINE  UNDERLINE  NO_ITALIC  ITALIC  NO_BLINK  BLINK );
+my @constants  = qw( DEFAULT BLACK  DARK_GREY  DARK_GRAY  LIGHT_GREY  LIGHT_GRAY  WHITE  RED  GREEN  YELLOW  BLUE  MAGENTA  CYAN  BRIGHT_RED  BRIGHT_GREEN  BRIGHT_YELLOW  BRIGHT_BLUE  BRIGHT_MAGENTA  BRIGHT_CYAN  NO_STYLE  FAINT  NORMAL  BOLD  UNDERLINE  NO_UNDERLINE  ITALIC  NO_ITALIC  BLINK NO_BLINK );
 my @logggers   = qw( LOG  WARN  WARNING  ERROR );
 my @basic      = qw( set_verbosity  get_verbosity  set_color_mode  extra_logging  show_warnings  show_errors  stack_trace  call_trace );
 my @extra      = qw( 
@@ -629,7 +634,7 @@ my @extra      = qw(
                      no_extra_logging  
                      get_stack_trace  get_call_trace
                      get_warnings  get_errors
-                     set_colors
+                     set_colors  get_styles  set_style
                    );
 my @functions = ( @logggers, @basic, @extra );
 
@@ -681,7 +686,7 @@ use constant BRIGHT_BLUE     => 64; # 94 / 104  "Bright blue"
 use constant BRIGHT_MAGENTA  => 65; # 95 / 105  "Bright magenta"
 use constant BRIGHT_CYAN     => 66; # 96 / 106  "Bright cyan"
 
-use constant DEFAULT         => 9;  # 39 / 49   Default foreground or background
+use constant DEFAULT         => undef;  # 39 / 49   Default foreground or background
 
 
 # === 8-bit color ===
@@ -706,26 +711,30 @@ use constant DEFAULT         => 9;  # 39 / 49   Default foreground or background
 #. green, and blue component (each an integer string between 0 and 255).        
 
 
+# === No style ===
+
+use constant NO_STYLE     =>   0;
+
 
 # === Font weight ===
-use constant FAINT     => 2;  # Not implimented on many terminals
-use constant NORMAL    => 22;
-use constant BOLD      => 1;
+use constant FAINT        =>   1;   # ANSI 2   Not implimented on many terminals
+use constant NORMAL       =>   2;   # ANSI 22
+use constant BOLD         =>   4;   # ANSI 1
 
 
 # === Underline ===
-use constant NO_UNDERLINE => 24;
-use constant UNDERLINE    => 4;
+use constant NO_UNDERLINE =>   8;  # ANSI 24
+use constant UNDERLINE    =>  16;  # ANSI 4
 
 
 # === ITALIC ===
-use constant NO_ITALIC   => 23;
-use constant ITALIC      => 3;   # Not implimented on many terminals
+use constant NO_ITALIC    =>  32;  # ANSI 23
+use constant ITALIC       =>  64;  # ANSI 3    Not implimented on many terminal
 
 
 # === Blink ===
-use constant NO_BLINK     => 25;
-use constant BLINK        => 5;
+use constant NO_BLINK     => 128;  # ANSI 25
+use constant BLINK        => 256;  # ANSI 5
 
 
 # *** Global variables ***
@@ -751,6 +760,138 @@ my $EXTRA_PATTERN = undef;      # Regular expression matching functions to be in
 my $LAST_SEEN_LEVEL  = undef;   # Keeps track of last used log level for stack_trace's sake
 my $STACKTRACE_LEVEL = -3;      # The log level to use for stack traces (undef = last seen level)
 
+
+# *** Styles ***
+
+my @STYLES = (
+               'default' => {
+                              '<0' => [  RED,             undef,  BOLD    ], 
+                              '-3' => [  BRIGHT_MAGENTA,  undef,  BOLD    ], 
+                              '-2' => [  RED,             undef,  BOLD    ], 
+                              '-1' => [  RED,             undef,  NORMAL  ], 
+                               '0' => [  undef,           undef,  BOLD    ], 
+                               '1' => [  undef,           undef,  NORMAL  ], 
+                               '2' => [  ';208',          undef,  NORMAL  ], 
+                               '3' => [  ';184',          undef,  NORMAL  ], 
+                               '4' => [  ';112',          undef,  NORMAL  ], 
+                              '>0' => [  ';111',          undef,  NORMAL  ]
+                            },
+               'blinky' => {
+                              '<0' => [  RED,             undef,  BOLD   | BLINK  ], 
+                              '-3' => [  BRIGHT_MAGENTA,  undef,  BOLD            ], 
+                              '-2' => [  RED,             undef,  BOLD   | BLINK  ], 
+                              '-1' => [  RED,             undef,  NORMAL | BLINK  ], 
+                               '0' => [  undef,           undef,  BOLD            ], 
+                               '1' => [  undef,           undef,  NORMAL          ], 
+                               '2' => [  ';208',          undef,  NORMAL          ], 
+                               '3' => [  ';184',          undef,  NORMAL          ], 
+                               '4' => [  ';112',          undef,  NORMAL          ], 
+                              '>0' => [  ';111',          undef,  NORMAL          ]
+                            },
+               'cyan'    => {
+                              '<0' => [  RED,             undef,  BOLD    ], 
+                              '-3' => [  BRIGHT_MAGENTA,  undef,  BOLD    ], 
+                              '-2' => [  RED,             undef,  BOLD    ], 
+                              '-1' => [  RED,             undef,  NORMAL  ], 
+                               '0' => [  undef,           undef,  BOLD    ], 
+                               '1' => [  undef,           undef,  NORMAL  ], 
+                               '2' => [  CYAN,            undef,  BOLD    ], 
+                               '3' => [  CYAN,            undef,  NORMAL  ], 
+                               '4' => [  CYAN,            undef,  NORMAL  ], 
+                              '>0' => [  CYAN,            undef,  NORMAL  ]
+                            },
+               'light-grey'  => {
+                              '<0' => [  RED,             undef,  BOLD    ], 
+                              '-3' => [  BRIGHT_MAGENTA,  undef,  BOLD    ], 
+                              '-2' => [  RED,             undef,  BOLD    ], 
+                              '-1' => [  RED,             undef,  NORMAL  ], 
+                               '0' => [  undef,           undef,  BOLD    ], 
+                               '1' => [  WHITE,           undef,  NORMAL  ], 
+                               '2' => [  ';252',          undef,  NORMAL  ], 
+                               '3' => [  ';248',          undef,  NORMAL  ], 
+                               '4' => [  ';244',          undef,  NORMAL  ], 
+                              '>0' => [  ';240',          undef,  NORMAL  ]
+                            },
+               'dark-grey'  => {
+                              '<0' => [  RED,             undef,  BOLD    ], 
+                              '-3' => [  BRIGHT_MAGENTA,  undef,  BOLD    ], 
+                              '-2' => [  RED,             undef,  BOLD    ], 
+                              '-1' => [  RED,             undef,  NORMAL  ], 
+                               '0' => [  undef,           undef,  BOLD    ], 
+                               '1' => [  BLACK,           undef,  NORMAL  ], 
+                               '2' => [  ';244',          undef,  NORMAL  ], 
+                               '3' => [  ';248',          undef,  NORMAL  ], 
+                               '4' => [  ';252',          undef,  NORMAL  ], 
+                              '>0' => [  ';254',          undef,  NORMAL  ]
+                            },
+               'subdued'  => {
+                              '<0' => [  RED,             undef,  BOLD    ], 
+                              '-3' => [  MAGENTA,         undef,  BOLD    ], 
+                              '-2' => [  RED,             undef,  BOLD    ], 
+                              '-1' => [  RED,             undef,  NORMAL  ], 
+                               '0' => [  undef,           undef,  BOLD    ], 
+                               '1' => [  undef,           undef,  NORMAL  ], 
+                               '2' => [  ';247',          undef,  NORMAL  ], 
+                               '3' => [  ';247',          undef,  NORMAL  ], 
+                               '4' => [  ';247',          undef,  NORMAL  ], 
+                              '>0' => [  ';247',          undef,  NORMAL  ] 
+                            },
+               'minimal'  => {
+                              '<0' => [  RED,             undef,  BOLD    ], 
+                              '-3' => [  MAGENTA,         undef,  NORMAL  ], 
+                              '-2' => [  RED,             undef,  BOLD    ], 
+                              '-1' => [  RED,             undef,  NORMAL  ], 
+                               '0' => [  undef,           undef,  BOLD    ], 
+                               '1' => [  undef,           undef,  NORMAL  ], 
+                               '2' => [  undef,           undef,  NORMAL  ], 
+                               '3' => [  undef,           undef,  NORMAL  ], 
+                               '4' => [  undef,           undef,  NORMAL  ], 
+                              '>0' => [  undef,           undef,  NORMAL  ] 
+                            },
+               'debug'  => {
+                              '<0' => [  WHITE,           RED,    BOLD    ], 
+                              '-3' => [  BRIGHT_MAGENTA,  undef,  BOLD    ], 
+                              '-2' => [  WHITE,           RED,    NORMAL  ], 
+                              '-1' => [  RED,             undef,  BOLD    ], 
+                               '0' => [  undef,           undef,  BOLD    ], 
+                               '1' => [  BLUE,            undef,  BOLD    ], 
+                               '2' => [  DARK_GREY,       undef,  NORMAL  ], 
+                               '3' => [  BRIGHT_YELLOW,   undef,  NORMAL  ], 
+                               '4' => [  BRIGHT_GREEN,    undef,  NORMAL  ], 
+                              '>0' => [  CYAN,            undef,  NORMAL  ] 
+                            },
+               'old-school' => {
+                              '<0' => [  ';46',           undef,  BOLD   | BLINK  ], 
+                              '-3' => [  ';46',           undef,  BOLD            ], 
+                              '-2' => [  ';46',           undef,  BOLD   | BLINK  ], 
+                              '-1' => [  ';46',           undef,  NORMAL | BLINK  ], 
+                               '0' => [  ';220',          undef,  BOLD            ], 
+                               '1' => [  ';190',          undef,  NORMAL          ], 
+                               '2' => [  ';154',          undef,  NORMAL          ], 
+                               '3' => [  ';118',          undef,  NORMAL          ], 
+                               '4' => [  ';82',           undef,  NORMAL          ], 
+                              '>0' => [  ';46',           undef,  NORMAL          ]
+                            }
+             );
+
+my %STYLES = @STYLES;
+my @STYLE_NAMES = ();
+
+{
+	my $is_key = 1;
+	foreach my $element ( @STYLES ) {
+		if ($is_key) {
+			$is_key = 0;
+			push @STYLE_NAMES, $element
+		} else {
+			# Is a style definintion
+			$is_key = 1;
+		}
+	}
+}
+
+my $STYLE_NAME = 'default';
+my $CUSTOM_STYLE = { };
 
 
 
@@ -799,7 +940,6 @@ used for a given log message will remain in effect unless explicitly overridden.
 =back
 
 =cut
-
 
 sub LOG($$;$$$@) {
 	my ( $level, $message, $FORE, $BACK, @STYLE );
@@ -853,57 +993,75 @@ sub LOG($$;$$$@) {
 	       ( $COLOR_MODE eq 'on' )
 		 ) {
 		
-		$FORE         = ( defined $FORE ) 
-		                ? ($FORE =~ /^;\d+;\d+;\d+$/)           ? "38;2;$FORE"  # 24-bit color:
-		                                                                      #   ;R;G;B
-		                                                                      #   R, G, B -> Red, Green and Blue compentent (0 .. 255)
-		                  : ($FORE =~ /^;\d+$/)                 ? "38;5;$FORE"  # 8-bit color:
-		                                                                        #   0-7     -> Standard colors
-		                                                                        #   8-15    -> Bright colors
-		                                                                        #   16-231  -> 216 color cube (6x6x6)
-		                                                                        #   232-255 -> 24 greyscale values (excluding black and white)
-		                  : ($FORE == DEFAULT)                  ? undef         # Forced default foreground color
-		                  :                                       30 + $FORE    # Forced foreground color
-		                : ($level < -2)                         ? 30 + MAGENTA  # Fix me: Magenta text
-		                : ($level <  0)                         ? 30 + RED      # Error:  Red text
-		                : ($level == 0)                         ? 30 + BLUE     # Blue text
-		                : ($level == 1)                         ? undef         # Default text color
-		                : ($level == 2)                         ? 30 + YELLOW   # Yellow text
-		                : ($level == 3)                         ? 30 + CYAN     # Cyan text
-		                :                                         undef;        # No special foreground color
+		my $LEVEL_STYLES = $STYLES{$STYLE_NAME};
 		
-		$BACK         = ( defined $BACK ) 
-		                ? ($BACK =~ /^;\d+;\d+;\d+$/)           ? "48;2;$BACK"  # 24-bit color:
-		                                                                        #   ;R;G;B
-		                                                                        #   R, G, B -> Red, Green and Blue compentent (0 .. 255)
-		                  : ($BACK =~ /^;\d+$/)                 ? "48;5;$BACK"  # 8-bit color:
-		                                                                        #   0-7     -> Standard colors
-		                                                                        #   8-15    -> Bright colors
-		                                                                        #   16-231  -> 216 color cube (6x6x6)
-		                                                                        #   232-255 -> 24 greyscale values (excluding black and white)
-		                  : ($BACK == DEFAULT)                  ? undef         # Forced default background color
-		                  :                                       40 + $BACK    # Forced background color
-		                :                                         undef;        # No special background color
+		my $STYLE = [ ];
 		
-		my $BOLD      = ( $SUPPLIED_STYLE{(&FAINT)} )           ? FAINT         # Forced faint
-		              : ( $SUPPLIED_STYLE{(&NORMAL)} )          ? NORMAL        # Forced normal
-		              : ( $SUPPLIED_STYLE{(&BOLD)} )            ? BOLD          # Forced bold
-		              : ($level <  0)                           ? BOLD          # <0: Bold text (Fix me, Error)
-		              : ($level == 0)                           ? BOLD          #  0: Bold text
-		              : ($level == 2)                           ? BOLD          #  3: Bold text (i.e. yellow not brown)
-		              :                                           undef;        # No special text style
+		if ( defined $LEVEL_STYLES ) {
+			if ( defined $$LEVEL_STYLES{$level} ) {
+				$STYLE = $$LEVEL_STYLES{$level};
+				
+			} else {
+				
+				if ($level > 0) {
+					if ( defined $$LEVEL_STYLES{'>0'} ) {
+						$STYLE = $$LEVEL_STYLES{'>0'};
+						
+					}
+					
+				} elsif ($level < 0) {
+					if ( defined $$LEVEL_STYLES{'>0'} ) {
+						$STYLE = $$LEVEL_STYLES{'<0'};
+						
+					}
+				}
+			}
+		}
 		
-		my $UNDERLINE = ( $SUPPLIED_STYLE{&NO_UNDERLINE} ) ? NO_UNDERLINE
-		              : ( $SUPPLIED_STYLE{&UNDERLINE} )    ? UNDERLINE
-		              :                                           undef;
+		sub make_foreground($) {
+			my ($color) = @_;
+			return undef          unless (defined $color);              # Default color
+			return "38;5$color"   if     ($color =~ /^;\d+$/);          # 8-bit color
+			return "38;2$color"   if     ($color =~ /^;\d+;\d+;\d+$/);  # 24-bit color
+			return 30 + $color;                                         # Color constant
+		}
 		
-		my $ITALIC    = ( $SUPPLIED_STYLE{&NO_ITALIC} )    ? NO_ITALIC
-		              : ( $SUPPLIED_STYLE{&ITALIC} )       ? ITALIC
-		              :                                           undef;
+		sub make_background($) {
+			my ($color) = @_;
+			return undef          unless (defined $color);              # Default color
+			return "48;5$color"   if     ($color =~ /^;\d+$/);          # 8-bit color
+			return "48;2$color"   if     ($color =~ /^;\d+;\d+;\d+$/);  # 24-bit color
+			return 40 + $color;                                         # Color constant
+		}
 		
-		my $BLINK     = ( $SUPPLIED_STYLE{&NO_BLINK} )     ? NO_BLINK
-		              : ( $SUPPLIED_STYLE{&BLINK} )        ? BLINK
-		              :                                          undef;
+		$FORE = make_foreground( $FORE )      if     ( defined $FORE );
+		$FORE = make_foreground( $$STYLE[0] ) unless ( defined $FORE );
+		
+		$BACK = make_background( $BACK )      if     ( defined $BACK );
+		$BACK = make_background( $$STYLE[1] ) unless ( defined $BACK );
+		
+		my $BOLD      = ( $SUPPLIED_STYLE{(&FAINT)} )       ? 2       # Forced faint        (ANSI faint = 2)
+		              : ( $SUPPLIED_STYLE{(&NORMAL)} )      ? 22      # Forced normal       (ANSI normal = 22)
+		              : ( $SUPPLIED_STYLE{(&BOLD)} )        ? 1       # Forced bold         (ANSI bold = 1)
+		              : ( $$STYLE[2] & FAINT )              ? 2       # Faint               (ANSI faint = 2)
+		              : ( $$STYLE[2] & NORMAL )             ? 22      # Normal              (ANSI normal = 22)
+		              : ( $$STYLE[2] & BOLD )               ? 1       # Bold                (ANSI bold = 1)
+		              :                                       undef;  # Use default
+		
+		my $UNDERLINE = ( $SUPPLIED_STYLE{&NO_UNDERLINE} ) ? undef    # Forced no underline (ANSI no underline=24)
+		              : ( $SUPPLIED_STYLE{&UNDERLINE} )    ? 4        # Forced underline    (ANSI underline=4)
+		              : ( $$STYLE[2] & UNDERLINE )         ? 4        # Underline           (ANSI underline=4)
+		              :                                      undef;
+		
+		my $ITALIC    = ( $SUPPLIED_STYLE{&NO_ITALIC} )    ? undef    # Forced no italic    (ANSI no italic=23)
+		              : ( $SUPPLIED_STYLE{&ITALIC} )       ? 3        # Forced italic       (ANSI italic=3)
+		              : ( $$STYLE[2] & UNDERLINE )         ? 3        # Italic              (ANSI italic=3)
+		              :                                      undef;   # Use default
+		
+		my $BLINK     = ( $SUPPLIED_STYLE{&NO_BLINK} )     ? undef    # Forced no blink     (ANSI no blink=25)
+		              : ( $SUPPLIED_STYLE{&BLINK} )        ? 5        # Forced blink        (ANSI blink=5)
+		              : ( $$STYLE[2] & BLINK )             ? 5        # Blink               (ANSI blink=5)
+		              :                                      undef;   # Use default
 		
 		push @STYLE, $FORE      if (defined $FORE);
 		push @STYLE, $BACK      if (defined $BACK);
@@ -927,6 +1085,7 @@ sub LOG($$;$$$@) {
 	} else {
 		print $TO $message;
 	}
+	#print "\n----------------------------------------------------------------------\n";
 }
 
 
@@ -1011,11 +1170,6 @@ sub ERROR($;$) {
 
 sub WARNING;  *WARNING = *WARN;
 
-#sub Log;      *Log     = *LOG;
-#sub Warn;     *Warn    = *WARN;
-#sub Warning;  *Warning = *WARN;
-#sub Error;    *Error   = *ERROR;
-
 
 
 =head2 show_warnings( )
@@ -1041,8 +1195,6 @@ sub show_warnings(;$) {
 		}
 	}
 }
-
-#sub ShowWarnings; *ShowWarnings = *show_warnings;
 
 
 
@@ -1071,8 +1223,6 @@ sub show_errors(;$) {
 	}
 }
 
-#sub ShowErrors; *ShowErrors = *show_errors;
-
 
 
 
@@ -1098,8 +1248,6 @@ sub get_warnings() {
 	return (wantarray) ? @warnings : \@warnings;
 }
 
-#sub GetWarnings; *GetWarnings = *get_warnings;
-
 
 
 
@@ -1124,8 +1272,6 @@ a reference to that list (when called in scalar context).
 sub get_errors() {
 	return (wantarray) ? @errors : \@errors;
 }
-
-#sub GetErrors; *GetErrors = *get_errors;
 
 
 
@@ -1239,10 +1385,6 @@ sub be_silent() {
 	$VERBOSE = -999;
 }
 
-#sub SetVerbosity; *SetVerbosity = *set_verbosity;
-#sub BeQuiet;      *BeQuiet      = *be_quiet;
-#sub BeSilent;     *BeSilent     = *be_silent;
-
 
 
 
@@ -1296,9 +1438,6 @@ sub no_extra_logging() {
 	$EXTRA_PATTERN   = undef;
 }
 
-#sub ExtraLogging;   *ExtraLogging   = *extra_logging;
-#sub NoExtraLogging; *NoExtraLogging = *no_extra_logging;
-
 
 
 
@@ -1340,35 +1479,92 @@ sub set_color_mode($;$) {
 	$COLOR_MODE = $requested;
 }
 
-#sub SetColorMode; *SetColorMode = *set_color_mode;
 
 
 
 
-=head2 set_colors( ... )
+
+=head2 get_styles( )
 
 =over
 
-C<set_colors( \%colors );>
+C<@style_names = get_styles( );>
 
-Specify the colors and styles used at each log level
+Get names of available styles
 
-This function is currently unimplemented.
+Returns a list of available style names.
 
 =back
 
 =cut
 
-sub set_colors($;$) {
-	my ($_colors) = ( $_[0] eq 'Log::Selective' )
-	              ? $_[1]
-	              : $_[0];
-	
-	WARN( "SetColors(...) is not implemented." );
+sub get_styles() {
+	return @STYLE_NAMES;
 }
 
-#sub SetColors; *SetColors = *set_colors;
 
+=head2 set_style( ... )
+
+=over
+
+C<set_style( $style_name );>
+
+C<set_style( \%style_definition );>
+
+Specify the colors and styles used at each log level
+
+B<C<$style_name>>
+
+=over
+
+String naming the style to use.
+
+Use C<L<get_styles( )|/get_styles(_)>> to determine which styles are available.
+
+=back
+
+B<C<\%style_definition>>
+
+=over
+
+Reference to hash describing the style to use.
+
+The keys to the hash are level definitions.  Each is a numeric levels (e.g. 
+C<-2>, C<0>, C<3>), the value C<E<lt>0> (for all undefined levels below 0), or 
+the value C<E<gt>0> (for all undefined levels above 0).
+
+The values are references to three-element arrays.  The first element is the 
+foreground color and the second element is the background color.  Colors are 
+either constants or strings as described in the B<Constants> and B<Colors> 
+sections, above.  Colors can also be specified as C<undef> in which case the 
+default foreground or background color will be used.
+
+The third element is the bitwise B<OR> of the constants describing the 
+style (see B<Constants>, above).  To specify no particular style use 
+C<NO_STYLE>.  Available style constants are C<FAINT>, C<NORMAL>, and C<BOLD> for 
+the font weight, and C<UNDERLINE>, C<ITALIC>, and C<BLINK> for text effects.
+For example, bold blinking text would be specified as:
+
+  BOLD | BLINK
+
+=back
+
+=back
+
+=cut
+
+sub set_style($;$) {
+	my ($new_style) = ( $_[0] eq 'Log::Selective' )
+	                ? $_[1]
+	                : $_[0];
+	
+	if ( defined $STYLES{$new_style} ) {
+		$STYLE_NAME = $new_style;
+	} else {
+		$STYLE_NAME = 'custom';
+		$STYLES{'custom'} = $new_style;
+	}
+}
 
 
 
@@ -1420,9 +1616,6 @@ sub append_newlines(;$$) {
 sub no_append_newlines() {
 	$NEWLINE = '';
 }
-
-#sub AppendNewlines;   *AppendNewlines   = *append_newlines;
-#sub NoAppendNewlines; *NoAppendNewlines = *no_append_newlines;
 
 
 
@@ -1529,10 +1722,6 @@ sub errors_to($;$) {
 	}
 }
 
-#sub LogTo;      *LogTo      = *log_to;
-#sub WarningsTo; *WarningsTo = *warnings_to;
-#sub ErrorsTo;   *ErrorsTo   = *errors_to;
-
 
 
 
@@ -1588,8 +1777,6 @@ sub stack_trace(;$$) {
 	LOG( $level, $newline );
 }
 
-#sub StackTrace; *StackTrace = *stack_trace;
-
 
 
 
@@ -1617,8 +1804,6 @@ sub get_stack_trace(;$) {
 	
 	return @stack;
 }
-
-#sub GetStackTrace; *GetStackTrace = *get_stack_trace;
 
 
 
@@ -1661,8 +1846,6 @@ sub call_trace(;$) {
 	LOG( $level, $path );
 }
 
-#sub CallTrace; *CallTrace = *call_trace;
-
 
 
 =head2 get_call_trace( )
@@ -1690,8 +1873,6 @@ sub get_call_trace(;$) {
 	
 	return $path;
 }
-
-#sub GetCallTrace; *GetCallTrace = *get_call_trace;
 
 
 
@@ -1723,8 +1904,6 @@ sub set_stack_trace_level($;$) {
 	                    : $_[0]
 	                  : undef;
 }
-
-#sub SetStackTraceLevel; *SetStackTraceLevel = *set_stack_trace_level;
 
 
 
@@ -1818,11 +1997,6 @@ sub stack_trace_on_errors(;$$) {
 sub no_stack_trace_on_errors(;$) {
 	$STACKTRACE_ON_ERRORS = 0;
 }
-
-#sub StackTraceOnWarnings;   *StackTraceOnWarnings   = *stack_trace_on_warnings;
-#sub NoStackTraceOnWarnings; *NoStackTraceOnWarnings = *no_stack_trace_on_warnings;
-#sub StackTraceOnErrors;     *StackTraceOnErrors     = *stack_trace_on_errors;
-#sub NoStackTraceOnErrors;   *NoStackTraceOnErrors   = *no_stack_trace_on_errors;
 
 
 

@@ -19,8 +19,14 @@ plan skip_all => "Pod::Coverage $min_pc required for testing POD coverage"
 all_pod_coverage_ok(
                      {
                        trustme => [
-                                    qw( LOG WARN ERROR log warn error ), 
-                                    qw( BLINK BOLD FAINT ITALIC NORMAL NO_BLINK NO_ITALIC NO_UNDERLINE UNDERLINE )
+                                    # Aliases:
+                                    qw( WARNING ), 
+                                    
+                                    # Constants:
+                                    qw( FAINT NORMAL BOLD ITALIC NO_ITALIC UNDERLINE NO_UNDERLINE BLINK NO_BLINK ),
+                                    
+                                    # Internal functions:
+                                    qw( make_background make_foreground )
                                     
                                     # Experimental methods:
                                     

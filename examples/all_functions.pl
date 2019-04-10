@@ -277,9 +277,50 @@ A();
 
 # ------------------------------------------------------------------------------
 
-print "\n\nSetting levels' colors and styles is not yet implemented\n";
+print "\n\nSetting levels' colors and styles:\n";
 
-#set_colors( \%colors ); # Specify the colors and styles used at each log level
+set_style('old-school');
+
+WARN( "Warning" );
+ERROR( "Error" );
+LOG(0, "Level 0");
+A();
+
+# ------------------------------------------------------------------------------
+
+print "\n\nSetting a custom style:\n";
+
+my %custom_style = (
+                     'description' => 'Custom style',
+                     '<0'  =>  [  RED,            undef,   BOLD   | BLINK  ], 
+                     '-3'  =>  [  MAGENTA,        WHITE,   BOLD            ], 
+                     '-2'  =>  [  RED,            ';240',  BOLD   | BLINK  ], 
+                     '-1'  =>  [  BRIGHT_YELLOW,  ';240',  NORMAL | BLINK  ], 
+                      '0'  =>  [  undef,          undef,   BOLD            ], 
+                      '1'  =>  [  undef,          undef,   NORMAL          ], 
+                      '2'  =>  [  BRIGHT_GREEN,   ';240',  BOLD            ], 
+                      '3'  =>  [  GREEN,          ';240',  NORMAL          ], 
+                      '4'  =>  [  CYAN,           ';240',  NORMAL          ], 
+                     '>0'  =>  [  BRIGHT_CYAN,    ';240',  NORMAL          ]
+                   );
+
+set_style( \%custom_style );
+
+WARN( "Warning" );
+ERROR( "Error" );
+LOG(0, "Level 0");
+A();
+
+# ------------------------------------------------------------------------------
+
+print "\n\nGetting available styles:\n";
+
+my @styles = get_styles();
+print "@styles\n";
+
+# ------------------------------------------------------------------------------
+
+set_style('default');
 
 # ------------------------------------------------------------------------------
 
@@ -373,9 +414,15 @@ LOG( 0, "Normal log message" );
 
 # ------------------------------------------------------------------------------
 
-print "\n\nColors and style applied to log message:\n";
+print "\n\nColors and style applied to a specific log message:\n";
 
-LOG( 0, "Text with styles applied", CYAN, WHITE, BOLD, UNDERLINE, BLINK );
+LOG( 0, "Text with styles applied", BLACK, BRIGHT_YELLOW, BOLD, ITALIC, UNDERLINE, BLINK );
+LOG( 0, "Red on white", RED, WHITE );
+LOG( 0, "Blue on cyan", BLUE, CYAN );
+LOG( 0, "Default colors, bold", undef, undef, BOLD );
+LOG( 0, "Default colors, italic", undef, undef, NORMAL, ITALIC );
+LOG( 0, "Default colors, underlined", undef, undef, NORMAL, UNDERLINE );
+LOG( 0, "Default colors, blinking", undef, undef, NORMAL, BLINK );
 
 # ------------------------------------------------------------------------------
 
