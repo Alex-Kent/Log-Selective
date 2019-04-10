@@ -177,10 +177,10 @@ C<STDOUT> one could use:
 
 =head3 Output colors and styles
 
-The colors and styles used at each logging level is currently fixed.  In future 
-these will be settable using the C<L<set_colors(...)|/set_colors(_..._)>> 
-function.  Custom colors and styling can, however, be specified for an 
-individual message using the long form of C<L<LOG(...)|/LOG(_..._)>>.
+The colors and styles used at each logging level can be set using C<L<set_style(...)|/set_style(_..._)>> 
+with the available styles returned by C<L<get_styles( )|/get_styles(_)>>.
+Custom colors and styling can also be specified for an individual message using 
+the long form of C<L<LOG(...)|/LOG(_..._)>>.
 
 Most terminals support coloring and styling.  For those that don't one can use 
 C<L<set_color_mode('off');|/set_color_mode(_..._)>> to force the use of plain text for all output.
@@ -362,7 +362,8 @@ Everything included by C<:typical> plus the following functions:
   append_newlines     get_stack_trace
   no_append_newlines  get_call_trace
   no_extra_logging    get_warnings
-  set_colors          get_errors
+  get_styles          get_errors
+  set_style           
 
 =back
 
@@ -489,7 +490,17 @@ Choose when colors and styles are used
 
 =back
 
-B<C<L<set_colors( \%colors )|/set_colors(_..._)>>>
+B<C<L<get_styles( )|/get_styles(_)>>>
+
+=over
+
+Get names of available styles
+
+=back
+
+B<C<L<set_style( $style_name )|/set_style(_..._)>>>
+
+B<C<L<set_style( \%style_definition )|/set_style(_..._)>>
 
 =over
 
@@ -2007,13 +2018,6 @@ sub no_stack_trace_on_errors(;$) {
 
 =over
 
-=item * The colors and styles used at the various levels is fixed.
-
-C<set_colors(...)> needs to be written (it is currently a stub) and C<LOG(...)> 
-needs to be modified.
-
-=item * Examples need to be written.
-
 =item * Tests need to be written.
 
 =back
@@ -2028,6 +2032,23 @@ on your submission as it takes place. Any other comments can be sent to C<akh@cp
 
 
 =head1 VERSION HISTORY
+
+B<0.0.2> (2018-04-10) - Added styles, examples
+
+=over
+
+=item * B<C<L<get_styles( )|/get_styles(_)>>>: New function
+
+=item * B<C<L<set_style( ... )|/set_style(_..._)>>>: New function
+
+=item * B<C<set_colors( ... )>>: Removed function
+
+=item * B<C<L<LOG( ... )|/LOG(_..._)>>>: Rewrote color and style code
+
+=item * Added detailed usage examples
+
+=back
+
 
 B<0.0.1> (2018-04-08) - Initial release
 
