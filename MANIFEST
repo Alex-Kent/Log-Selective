@@ -1,9 +1,11 @@
 Changes
 examples/00_index.txt
 examples/all_functions.pl
+examples/colors.pl
 examples/extra_logging.pl
 examples/getopt_long.pl
 examples/stack_trace.pl
+examples/styles.pl
 ignore.txt
 lib/Log/Selective.pm
 LICENSE

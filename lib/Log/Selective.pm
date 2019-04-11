@@ -26,7 +26,7 @@ Log::Selective - Selective logging to the console.
 =cut
 
 use vars qw ($VERSION);
-$VERSION = 'v0.0.2';
+$VERSION = 'v0.0.3';
 
 =head1 VERSION
 
@@ -285,6 +285,10 @@ Note that blink does not work in C<rxvt> when a background color is specified.
 Some terminals stop blinking text when the window is not focused; with C<xterm> 
 blinking text might not be visible when the window does not have focus.
 
+=item Inverse video:
+
+  INVERSE       NO_INVERSE
+
 =item Remove all styles:
 
   NO_STYLE
@@ -363,7 +367,8 @@ Everything included by C<:typical> plus the following functions:
   no_append_newlines  get_call_trace
   no_extra_logging    get_warnings
   get_styles          get_errors
-  set_style           
+  set_style           unbuffer_output
+  get_style           
 
 =back
 
@@ -500,11 +505,19 @@ Get names of available styles
 
 B<C<L<set_style( $style_name )|/set_style(_..._)>>>
 
-B<C<L<set_style( \%style_definition )|/set_style(_..._)>>
+B<C<L<set_style( \%style_definition )|/set_style(_..._)>>>
 
 =over
 
 Specify the colors and styles used at each log level
+
+=back
+
+B<C<L<get_style( )|/get_style(_)>>>
+
+=over
+
+Returns the name of the current style
 
 =back
 
@@ -547,6 +560,14 @@ B<C<L<errors_to( $handle )|/errors_to(_..._)>>>
 =over
 
 Specify handle to write errors (and, by default, stack traces) to
+
+=back
+
+B<C<L<unbuffer_output( )|/unbuffer_output(_)>>>
+
+=over
+
+Unbuffer the current log, warning, and error file handles
 
 =back
 
@@ -632,7 +653,18 @@ Do not show a stack trace after errors
 
 use Exporter 'import';
 
-my @constants  = qw( DEFAULT BLACK  DARK_GREY  DARK_GRAY  LIGHT_GREY  LIGHT_GRAY  WHITE  RED  GREEN  YELLOW  BLUE  MAGENTA  CYAN  BRIGHT_RED  BRIGHT_GREEN  BRIGHT_YELLOW  BRIGHT_BLUE  BRIGHT_MAGENTA  BRIGHT_CYAN  NO_STYLE  FAINT  NORMAL  BOLD  UNDERLINE  NO_UNDERLINE  ITALIC  NO_ITALIC  BLINK NO_BLINK );
+my @constants  = qw( 
+                     DEFAULT  
+                     BLACK       DARK_GREY     DARK_GRAY      LIGHT_GREY   LIGHT_GRAY      WHITE  
+                     RED         GREEN         YELLOW         BLUE         MAGENTA         CYAN  
+                     BRIGHT_RED  BRIGHT_GREEN  BRIGHT_YELLOW  BRIGHT_BLUE  BRIGHT_MAGENTA  BRIGHT_CYAN  
+                     NO_STYLE  
+                     FAINT       NORMAL        BOLD  
+                     UNDERLINE   NO_UNDERLINE  
+                     ITALIC      NO_ITALIC  
+                     INVERSE     NO_INVERSE  
+                     BLINK       NO_BLINK 
+                   );
 my @logggers   = qw( LOG  WARN  WARNING  ERROR );
 my @basic      = qw( set_verbosity  get_verbosity  set_color_mode  extra_logging  show_warnings  show_errors  stack_trace  call_trace );
 my @extra      = qw( 
@@ -645,7 +677,8 @@ my @extra      = qw(
                      no_extra_logging  
                      get_stack_trace  get_call_trace
                      get_warnings  get_errors
-                     set_colors  get_styles  set_style
+                     set_colors  get_styles  set_style  get_style
+                     unbuffer_output
                    );
 my @functions = ( @logggers, @basic, @extra );
 
@@ -724,28 +757,33 @@ use constant DEFAULT         => undef;  # 39 / 49   Default foreground or backgr
 
 # === No style ===
 
-use constant NO_STYLE     =>   0;
+use constant NO_STYLE     =>    0;
 
 
 # === Font weight ===
-use constant FAINT        =>   1;   # ANSI 2   Not implimented on many terminals
-use constant NORMAL       =>   2;   # ANSI 22
-use constant BOLD         =>   4;   # ANSI 1
+use constant FAINT        =>    1;   # ANSI 2   Not implimented on many terminals
+use constant NORMAL       =>    2;   # ANSI 22
+use constant BOLD         =>    4;   # ANSI 1
 
 
 # === Underline ===
-use constant NO_UNDERLINE =>   8;  # ANSI 24
-use constant UNDERLINE    =>  16;  # ANSI 4
+use constant NO_UNDERLINE =>    8;  # ANSI 24
+use constant UNDERLINE    =>   16;  # ANSI 4
 
 
 # === ITALIC ===
-use constant NO_ITALIC    =>  32;  # ANSI 23
-use constant ITALIC       =>  64;  # ANSI 3    Not implimented on many terminal
+use constant NO_ITALIC    =>   32;  # ANSI 23
+use constant ITALIC       =>   64;  # ANSI 3    Not implimented on many terminal
+
+
+# === Inverse ===
+use constant NO_INVERSE   =>  128;  # ANSI 7
+use constant INVERSE      =>  256;  # ANSI 27
 
 
 # === Blink ===
-use constant NO_BLINK     => 128;  # ANSI 25
-use constant BLINK        => 256;  # ANSI 5
+use constant NO_BLINK     =>  512;  # ANSI 25
+use constant BLINK        => 1024;  # ANSI 5
 
 
 # *** Global variables ***
@@ -816,7 +854,7 @@ my @STYLES = (
                               '-3' => [  BRIGHT_MAGENTA,  undef,  BOLD    ], 
                               '-2' => [  RED,             undef,  BOLD    ], 
                               '-1' => [  RED,             undef,  NORMAL  ], 
-                               '0' => [  undef,           undef,  BOLD    ], 
+                               '0' => [  WHITE,           undef,  BOLD    ], 
                                '1' => [  WHITE,           undef,  NORMAL  ], 
                                '2' => [  ';252',          undef,  NORMAL  ], 
                                '3' => [  ';248',          undef,  NORMAL  ], 
@@ -828,7 +866,7 @@ my @STYLES = (
                               '-3' => [  BRIGHT_MAGENTA,  undef,  BOLD    ], 
                               '-2' => [  RED,             undef,  BOLD    ], 
                               '-1' => [  RED,             undef,  NORMAL  ], 
-                               '0' => [  undef,           undef,  BOLD    ], 
+                               '0' => [  BLACK,           undef,  BOLD    ], 
                                '1' => [  BLACK,           undef,  NORMAL  ], 
                                '2' => [  ';244',          undef,  NORMAL  ], 
                                '3' => [  ';248',          undef,  NORMAL  ], 
@@ -842,10 +880,34 @@ my @STYLES = (
                               '-1' => [  RED,             undef,  NORMAL  ], 
                                '0' => [  undef,           undef,  BOLD    ], 
                                '1' => [  undef,           undef,  NORMAL  ], 
-                               '2' => [  ';247',          undef,  NORMAL  ], 
-                               '3' => [  ';247',          undef,  NORMAL  ], 
-                               '4' => [  ';247',          undef,  NORMAL  ], 
-                              '>0' => [  ';247',          undef,  NORMAL  ] 
+                               '2' => [  ';245',          undef,  NORMAL  ], 
+                               '3' => [  ';245',          undef,  NORMAL  ], 
+                               '4' => [  ';245',          undef,  NORMAL  ], 
+                              '>0' => [  ';245',          undef,  NORMAL  ] 
+                            },
+               'subdued-light'  => {
+                              '<0' => [  RED,             undef,  BOLD    ], 
+                              '-3' => [  MAGENTA,         undef,  BOLD    ], 
+                              '-2' => [  RED,             undef,  BOLD    ], 
+                              '-1' => [  RED,             undef,  NORMAL  ], 
+                               '0' => [  undef,           undef,  BOLD    ], 
+                               '1' => [  undef,           undef,  NORMAL  ], 
+                               '2' => [  ';250',          undef,  NORMAL  ], 
+                               '3' => [  ';250',          undef,  NORMAL  ], 
+                               '4' => [  ';250',          undef,  NORMAL  ], 
+                              '>0' => [  ';250',          undef,  NORMAL  ] 
+                            },
+               'subdued-dark' => {
+                              '<0' => [  RED,             undef,  BOLD    ], 
+                              '-3' => [  MAGENTA,         undef,  BOLD    ], 
+                              '-2' => [  RED,             undef,  BOLD    ], 
+                              '-1' => [  RED,             undef,  NORMAL  ], 
+                               '0' => [  undef,           undef,  BOLD    ], 
+                               '1' => [  undef,           undef,  NORMAL  ], 
+                               '2' => [  ';241',          undef,  NORMAL  ], 
+                               '3' => [  ';241',          undef,  NORMAL  ], 
+                               '4' => [  ';241',          undef,  NORMAL  ], 
+                              '>0' => [  ';241',          undef,  NORMAL  ] 
                             },
                'minimal'  => {
                               '<0' => [  RED,             undef,  BOLD    ], 
@@ -874,7 +936,7 @@ my @STYLES = (
                'old-school' => {
                               '<0' => [  ';46',           undef,  BOLD   | BLINK  ], 
                               '-3' => [  ';46',           undef,  BOLD            ], 
-                              '-2' => [  ';46',           undef,  BOLD   | BLINK  ], 
+                              '-2' => [  ';220',          undef,  BOLD   | BLINK  ], 
                               '-1' => [  ';46',           undef,  NORMAL | BLINK  ], 
                                '0' => [  ';220',          undef,  BOLD            ], 
                                '1' => [  ';190',          undef,  NORMAL          ], 
@@ -1004,7 +1066,7 @@ sub LOG($$;$$$@) {
 	       ( $COLOR_MODE eq 'on' )
 		 ) {
 		
-		my $LEVEL_STYLES = $STYLES{$STYLE_NAME};
+		my $LEVEL_STYLES = ( defined $STYLES{$STYLE_NAME} ) ? $STYLES{$STYLE_NAME} : $STYLES{'default'};
 		
 		my $STYLE = [ ];
 		
@@ -1069,6 +1131,11 @@ sub LOG($$;$$$@) {
 		              : ( $$STYLE[2] & UNDERLINE )         ? 3        # Italic              (ANSI italic=3)
 		              :                                      undef;   # Use default
 		
+		my $INVERSE    = ( $SUPPLIED_STYLE{&NO_INVERSE} )  ? undef    # Forced no inverse    (ANSI no inverse=27)
+		              : ( $SUPPLIED_STYLE{&INVERSE} )      ? 7        # Forced inverse       (ANSI inverse=7)
+		              : ( $$STYLE[2] & INVERSE )           ? 7        # inverse              (ANSI inverse=7)
+		              :                                      undef;   # Use default
+		
 		my $BLINK     = ( $SUPPLIED_STYLE{&NO_BLINK} )     ? undef    # Forced no blink     (ANSI no blink=25)
 		              : ( $SUPPLIED_STYLE{&BLINK} )        ? 5        # Forced blink        (ANSI blink=5)
 		              : ( $$STYLE[2] & BLINK )             ? 5        # Blink               (ANSI blink=5)
@@ -1078,6 +1145,7 @@ sub LOG($$;$$$@) {
 		push @STYLE, $BACK      if (defined $BACK);
 		push @STYLE, $BOLD      if (defined $BOLD);
 		push @STYLE, $ITALIC    if (defined $ITALIC);
+		push @STYLE, $INVERSE   if (defined $INVERSE);
 		push @STYLE, $UNDERLINE if (defined $UNDERLINE);
 		push @STYLE, $BLINK     if (defined $BLINK);
 	}
@@ -1130,7 +1198,7 @@ sub WARN($;$) {
 	              ? $_[1]
 	              : $_[0];
 	
-	LOG(-1, $message, RED, DEFAULT, NORMAL);
+	LOG(-1, $message);
 	push @warnings, $message;
 	if ($STACKTRACE_ON_WARNINGS) {
 		stack_trace();
@@ -1167,7 +1235,7 @@ sub ERROR($;$) {
 	              ? $_[1]
 	              : $_[0];
 	
-	LOG(-2, $message, RED, DEFAULT, BOLD);
+	LOG(-2, $message);
 	push @errors, $message;
 	if ($STACKTRACE_ON_ERRORS) {
 		stack_trace();
@@ -1571,10 +1639,29 @@ sub set_style($;$) {
 	
 	if ( defined $STYLES{$new_style} ) {
 		$STYLE_NAME = $new_style;
-	} else {
+	} elsif ( ref $new_style eq 'HASH' ) {
 		$STYLE_NAME = 'custom';
 		$STYLES{'custom'} = $new_style;
+	} else {
+		$STYLE_NAME = 'default';
 	}
+}
+
+
+=head2 get_style( )
+
+=over
+
+C<$style_name = get_style( );>
+
+Returns the name of the current style
+
+=back
+
+=cut
+
+sub get_style() {
+	return $STYLE_NAME;
 }
 
 
@@ -1731,6 +1818,28 @@ sub errors_to($;$) {
 	} else {
 		$ERRORS = $_[0];
 	}
+}
+
+
+
+
+=head2 unbuffer_output( )
+
+=over
+
+C<unbuffer_output( );>
+
+Unbuffer the current log, warning, and error file handles
+
+=back
+
+=cut
+
+sub unbuffer_output(;$) {
+	my $temp;
+	$temp = select $OUTPUT;   $| = 1; select $temp;
+	$temp = select $WARNINGS; $| = 1; select $temp;
+	$temp = select $ERRORS;   $| = 1; select $temp;
 }
 
 
@@ -2033,7 +2142,27 @@ on your submission as it takes place. Any other comments can be sent to C<akh@cp
 
 =head1 VERSION HISTORY
 
-B<0.0.2> (2018-04-10) - Added styles, examples
+B<0.0.3> (2019-04-11) - Bug fixes, added functionality
+
+=over
+
+=item * Fixed typos in docs
+
+=item * Bug fixes in B<C<L<LOG()|/LOG( ... )>>>, B<C<L<WARN()|/WARN( ... )>>>, B<C<L<ERROR()|/ERROR( ... )>>>, and B<C<L<set_style()|/set_style( ... )>>>
+
+=item * Added B<C<L<get_style()|/get_style( )>>>
+
+=item * Added B<C<L<unbuffer_output()|/unbuffer_output( )>>>
+
+=item * Added C<INVERSE> text option
+
+=item * Tweaked styles
+
+=item * Updated C<examples/getopt_long.pl>
+
+=back
+
+B<0.0.2> (2019-04-10) - Added styles, examples
 
 =over
 
@@ -2050,7 +2179,7 @@ B<0.0.2> (2018-04-10) - Added styles, examples
 =back
 
 
-B<0.0.1> (2018-04-08) - Initial release
+B<0.0.1> (2019-04-08) - Initial release
 
 
 =head1 AUTHOR

@@ -23,7 +23,7 @@ all_pod_coverage_ok(
                                     qw( WARNING ), 
                                     
                                     # Constants:
-                                    qw( FAINT NORMAL BOLD ITALIC NO_ITALIC UNDERLINE NO_UNDERLINE BLINK NO_BLINK ),
+                                    qw( FAINT NORMAL BOLD ITALIC NO_ITALIC UNDERLINE NO_UNDERLINE INVERSE NO_INVERSE BLINK NO_BLINK ),
                                     
                                     # Internal functions:
                                     qw( make_background make_foreground )

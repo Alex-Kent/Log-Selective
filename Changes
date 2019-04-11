@@ -1,4 +1,24 @@
 Revision history for Log::Selective
 
+0.0.3   2019-04-11
+Bug fixes, added functionality
+
+  o Fixed typos in docs
+  o Bug fixes in LOG(), WARN(), ERROR(), and set_style()
+  o Added get_style()
+  o Added unbuffer_output()
+  o Added INVERSE text option
+  o Tweaked styles
+  o Updated examples/getopt_long.pl
+
+0.0.2   2019-04-10
+Added styles, examples
+
+  o get_styles(): New function
+  o set_style(): New function
+  o set_colors(): Removed function
+  o LOG(): Rewrote color and style code
+  o Added detailed usage examples
+
 0.0.1   2019-04-08
 Initial release
