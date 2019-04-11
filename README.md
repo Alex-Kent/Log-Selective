@@ -2,8 +2,6 @@
 
 ### Perl module for selective logging to the console
 
-Log::Selective 
-
 This module is a logger with adjustable verbosity for commandline programs. 
 Different verbosity levels can have different colors and styles applied and 
 specific functions or methods can get extra verbosity.
